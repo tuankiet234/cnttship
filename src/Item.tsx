@@ -1,4 +1,4 @@
-import { TextField } from '@mui/material'
+import { TextField, Typography } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { createRecord, deleteRecord, query, updateRecord } from 'thin-backend'
 import { useQuery } from 'thin-backend-react'
@@ -134,6 +134,9 @@ export default function Item() {
 
   return (
     <>
+      <Typography variant="h4" mb={2}>
+        Item
+      </Typography>
       <SelectComponent
         id="select-shop"
         items={shops ?? []}

@@ -8,6 +8,7 @@ import Order from './Order'
 import Item from './Item'
 import Category from './Category'
 import Shop from './Shop'
+import OrderDetail from './OrderDetail'
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: 'order',
         element: <Order />,
+      },
+      {
+        path: 'order/:id',
+        element: <OrderDetail />,
       },
       {
         path: 'shop',

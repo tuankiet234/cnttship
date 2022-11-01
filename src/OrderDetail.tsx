@@ -1,4 +1,4 @@
-import { TextField, Typography } from '@mui/material'
+import { IconButton, TextField, Typography } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { createRecord, deleteRecord, query, updateRecord } from 'thin-backend'
 import { useQuery } from 'thin-backend-react'
@@ -7,9 +7,12 @@ import Schema from 'async-validator'
 import GridHeaderCommand from './components/GridHeaderCommand'
 import GridCellCommand from './components/GridCellCommand'
 import GridDrawer from './components/GridDrawer'
+import SelectComponent from './components/SelectComponent'
+import { KeyboardTab } from '@mui/icons-material'
 
-function Shop() {
-  const rows = useQuery(query('shops'))
+export default function Category() {
+  const rows = useQuery(query('orders').orderByDesc('createdAt'))
+  const shops = useQuery(query('shops'))
   const columns: GridColDef[] = [
     {
       field: 'name',
@@ -19,11 +22,32 @@ function Shop() {
       disableColumnMenu: true,
     },
     {
-      field: 'phone',
-      headerName: 'Phone',
+      field: 'shopId',
+      headerName: 'Shop',
       flex: 1,
       headerAlign: 'center',
       disableColumnMenu: true,
+      renderCell: ({ value }) => shops?.find((s) => s.id === value)?.name,
+    },
+    {
+      field: 'createdAt',
+      headerName: 'Date',
+      flex: 1,
+      headerAlign: 'center',
+      disableColumnMenu: true,
+    },
+    {
+      field: 'detail',
+      headerName: 'Detail',
+      flex: 1,
+      headerAlign: 'center',
+      align: 'center',
+      disableColumnMenu: true,
+      renderCell: ({ value, row }) => (
+        <IconButton color="primary">
+          <KeyboardTab></KeyboardTab>
+        </IconButton>
+      ),
     },
     {
       field: 'id',
@@ -33,13 +57,13 @@ function Shop() {
       width: 150,
       renderHeader: (v) => (
         <GridHeaderCommand
-          onClick={() => openDrawer({ name: '', phone: '' })}
+          onClick={() => openDrawer({ name: '', shopId: '' })}
         ></GridHeaderCommand>
       ),
       renderCell: ({ value, row }) => (
         <GridCellCommand
           onUpdateClick={() => openDrawer(row)}
-          onDeleteClick={() => handleDeleteClick()}
+          onDeleteClick={() => handleDeleteClick(value)}
         ></GridCellCommand>
       ),
       align: 'center',
@@ -50,8 +74,8 @@ function Shop() {
   const [item, setItem] = useState<{
     id?: string
     name: string
-    phone: string
-  }>({ name: '', phone: '' })
+    shopId: string
+  }>({ name: '', shopId: '' })
 
   const [fields, setFields] = useState<any>({})
   const validator = new Schema({
@@ -59,7 +83,7 @@ function Shop() {
       type: 'string',
       required: true,
     },
-    phone: {
+    shopId: {
       type: 'string',
       required: true,
     },
@@ -79,7 +103,6 @@ function Shop() {
     } catch (e: any) {
       const result: any = {}
       e.errors.forEach((f: any) => (result[f.field] = f.message))
-      console.log(result)
       setFields(result)
       return false
     }
@@ -93,29 +116,30 @@ function Shop() {
 
     if (item.id === undefined)
       //create
-      await createRecord('shops', item)
+      await createRecord('orders', item)
     //update
-    else await updateRecord('shops', item.id, item)
+    else await updateRecord('orders', item.id, item)
 
     setDrawer(false)
   }
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = async (id: string) => {
     if (
       // eslint-disable-next-line no-restricted-globals
       !confirm('Do you want to delete this record?')
     )
       return
 
-    if (item.id === undefined) return
+    if (id === undefined) return
 
-    await deleteRecord('shops', item.id)
+    await deleteRecord('orders', id)
   }
 
   return (
     <>
-      <Typography variant="h4" mb={2}>
-        Shop
+      hello
+      {/* <Typography variant="h4" mb={2}>
+        Order Detail
       </Typography>
       <DataGrid
         rows={rows ?? []}
@@ -142,18 +166,17 @@ function Shop() {
           error={fields.name !== undefined}
           helperText={fields.name}
         ></TextField>
-        <TextField
-          label="Phone"
-          required
-          value={item.phone}
-          onChange={(e) => setItem({ ...item, phone: e.target.value })}
+        <SelectComponent
+          id="form-select-shop"
+          items={shops ?? []}
+          label="Shop"
+          value={item.shopId}
+          onChange={(val) => setItem({ ...item, shopId: val as string })}
           onBlur={() => validate()}
-          error={fields.phone !== undefined}
-          helperText={fields.phone}
-        ></TextField>
-      </GridDrawer>
+          error={fields.shopId !== undefined}
+          helperText={fields.shopId}
+        ></SelectComponent>
+      </GridDrawer> */}
     </>
   )
 }
-
-export default Shop

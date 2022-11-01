@@ -19,6 +19,7 @@ type SelectComponentProps = {
   helperText?: string
   sx?: SxProps
   onChange: (val: string | number) => void
+  onBlur?: () => void
 }
 
 const SelectComponent: FunctionComponent<SelectComponentProps> = (props) => (
@@ -31,6 +32,7 @@ const SelectComponent: FunctionComponent<SelectComponentProps> = (props) => (
       label={props.label}
       error={props.error ?? false}
       onChange={(e) => props.onChange(e.target.value)}
+      onBlur={() => props.onBlur}
     >
       {props.items.map((i, idx) => (
         <MenuItem key={idx} value={i[props.valueItem ?? 'id']}>
