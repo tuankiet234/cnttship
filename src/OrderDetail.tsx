@@ -1,75 +1,50 @@
 import { IconButton, TextField, Typography } from '@mui/material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { createRecord, deleteRecord, query, updateRecord } from 'thin-backend'
+import { DataGrid, GridColDef, GridSelectionModel } from '@mui/x-data-grid'
+import {
+  createRecord,
+  createRecords,
+  deleteRecord,
+  deleteRecords,
+  query,
+  updateRecord,
+} from 'thin-backend'
 import { useQuery } from 'thin-backend-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Schema from 'async-validator'
 import GridHeaderCommand from './components/GridHeaderCommand'
 import GridCellCommand from './components/GridCellCommand'
 import GridDrawer from './components/GridDrawer'
 import SelectComponent from './components/SelectComponent'
-import { KeyboardTab } from '@mui/icons-material'
+import { ArrowBack, KeyboardTab } from '@mui/icons-material'
+import { useParams, useRoutes, useNavigate } from 'react-router-dom'
 
 export default function Category() {
+  const params = useParams()
+  const navigate = useNavigate()
+  const orderId = params.id
+  const [order, setOrder] = useState<any>({})
+  useEffect(() => {
+    if (orderId === undefined) return
+    query('orders')
+      .where('id', orderId)
+      .fetchOne()
+      .then((data) => setOrder(data))
+  }, [orderId])
+
+  const users = useQuery(query('users'))
   const rows = useQuery(query('orders').orderByDesc('createdAt'))
   const shops = useQuery(query('shops'))
   const columns: GridColDef[] = [
     {
-      field: 'name',
+      field: 'email',
       headerName: 'Name',
       flex: 1,
       headerAlign: 'center',
       disableColumnMenu: true,
     },
-    {
-      field: 'shopId',
-      headerName: 'Shop',
-      flex: 1,
-      headerAlign: 'center',
-      disableColumnMenu: true,
-      renderCell: ({ value }) => shops?.find((s) => s.id === value)?.name,
-    },
-    {
-      field: 'createdAt',
-      headerName: 'Date',
-      flex: 1,
-      headerAlign: 'center',
-      disableColumnMenu: true,
-    },
-    {
-      field: 'detail',
-      headerName: 'Detail',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      disableColumnMenu: true,
-      renderCell: ({ value, row }) => (
-        <IconButton color="primary">
-          <KeyboardTab></KeyboardTab>
-        </IconButton>
-      ),
-    },
-    {
-      field: 'id',
-      headerAlign: 'center',
-      disableColumnMenu: true,
-      sortable: false,
-      width: 150,
-      renderHeader: (v) => (
-        <GridHeaderCommand
-          onClick={() => openDrawer({ name: '', shopId: '' })}
-        ></GridHeaderCommand>
-      ),
-      renderCell: ({ value, row }) => (
-        <GridCellCommand
-          onUpdateClick={() => openDrawer(row)}
-          onDeleteClick={() => handleDeleteClick(value)}
-        ></GridCellCommand>
-      ),
-      align: 'center',
-    },
   ]
 
+  const [test, setTest] = useState('')
   const [drawer, setDrawer] = useState(false)
   const [item, setItem] = useState<{
     id?: string
@@ -135,9 +110,44 @@ export default function Category() {
     await deleteRecord('orders', id)
   }
 
+  const handleSelection = async (selection: GridSelectionModel) => {
+    if (orderId === undefined) return
+    const orderUser = await query('order_users')
+      .where('orderId', orderId)
+      .fetch()
+    await deleteRecords(
+      'order_users',
+      orderUser.map((o) => o.id)
+    )
+
+    await createRecords(
+      'order_users',
+      selection.map((s) => ({
+        orderId,
+        userId: s.toString(),
+      }))
+    )
+  }
+
   return (
     <>
-      hello
+      <Typography variant="h4" mb={2}>
+        <IconButton onClick={() => navigate('/Order')}>
+          <ArrowBack></ArrowBack>
+        </IconButton>
+        Order {order?.name}
+      </Typography>
+      <DataGrid
+        rows={users ?? []}
+        columns={columns}
+        loading={users === null}
+        autoHeight
+        disableSelectionOnClick
+        showCellRightBorder
+        showColumnRightBorder
+        checkboxSelection
+        onSelectionModelChange={handleSelection}
+      />
       {/* <Typography variant="h4" mb={2}>
         Order Detail
       </Typography>

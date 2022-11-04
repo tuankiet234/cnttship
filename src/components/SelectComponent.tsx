@@ -11,14 +11,17 @@ import { FunctionComponent } from 'react'
 type SelectComponentProps = {
   id: string
   label: string
-  value: string | number
+  value: string | number | string[] | number[]
   items: any[]
   labelItem?: string
   valueItem?: string | number
   error?: boolean
   helperText?: string
   sx?: SxProps
-  onChange: (val: string | number) => void
+  fullWidth?: boolean
+  multiple?: boolean
+  startAdornment?: React.ReactNode
+  onChange: (val: string | number | string[] | number[]) => void
   onBlur?: () => void
 }
 
@@ -31,6 +34,9 @@ const SelectComponent: FunctionComponent<SelectComponentProps> = (props) => (
       value={props.value}
       label={props.label}
       error={props.error ?? false}
+      multiple={props.multiple ?? false}
+      fullWidth={props.fullWidth ?? false}
+      startAdornment={props.startAdornment ?? <></>}
       onChange={(e) => props.onChange(e.target.value)}
       onBlur={() => props.onBlur}
     >

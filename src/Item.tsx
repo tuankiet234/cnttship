@@ -1,4 +1,4 @@
-import { TextField, Typography } from '@mui/material'
+import { Drawer, IconButton, TextField, Typography } from '@mui/material'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { createRecord, deleteRecord, query, updateRecord } from 'thin-backend'
 import { useQuery } from 'thin-backend-react'
@@ -8,16 +8,12 @@ import GridHeaderCommand from './components/GridHeaderCommand'
 import GridCellCommand from './components/GridCellCommand'
 import GridDrawer from './components/GridDrawer'
 import SelectComponent from './components/SelectComponent'
+import { Close } from '@mui/icons-material'
 
 export default function Item() {
   const [shopId, setShopId] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const rows = useQuery(
-    query('items')
-      .where('shopId', shopId)
-      .where('categoryId', categoryId)
-      .orderBy('createdAt')
-  )
+  const rows = useQuery(query('items').orderBy('createdAt'))
   const shops = useQuery(query('shops').orderBy('createdAt'))
   const categories = useQuery(query('categories').orderBy('createdAt'))
   const columns: GridColDef[] = [
@@ -27,6 +23,14 @@ export default function Item() {
       flex: 1,
       headerAlign: 'center',
       disableColumnMenu: true,
+    },
+    {
+      field: 'categoryId',
+      headerName: 'Category',
+      flex: 1,
+      headerAlign: 'center',
+      disableColumnMenu: true,
+      renderCell: ({ value }) => categories?.find((c) => c.id === value)?.name,
     },
     {
       field: 'price',
@@ -151,14 +155,25 @@ export default function Item() {
         label="Category"
         value={categoryId}
         sx={{ minWidth: 200, mb: 2 }}
+        startAdornment={
+          <IconButton onClick={() => setCategoryId('')}>
+            <Close></Close>
+          </IconButton>
+        }
         onChange={(val) => setCategoryId(val as string)}
       ></SelectComponent>
 
-      {shopId === '' || categoryId === '' ? (
+      {shopId === '' ? (
         ''
       ) : (
         <DataGrid
-          rows={rows ?? []}
+          rows={
+            rows?.filter(
+              (r) =>
+                r.shopId === shopId &&
+                (categoryId === '' || r.categoryId === categoryId)
+            ) ?? []
+          }
           columns={columns}
           loading={rows === null}
           autoHeight
@@ -207,6 +222,8 @@ export default function Item() {
           items={categories ?? []}
           label="Category"
           value={item.categoryId}
+          error={fields.categoryId !== undefined}
+          helperText={fields.categoryId}
           onChange={(val) => setItem({ ...item, categoryId: val as string })}
         ></SelectComponent>
       </GridDrawer>

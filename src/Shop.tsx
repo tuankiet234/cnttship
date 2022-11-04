@@ -91,10 +91,7 @@ function Shop() {
   const handleSave = async () => {
     if (!(await validate())) return
 
-    if (item.id === undefined)
-      //create
-      await createRecord('shops', item)
-    //update
+    if (item.id === undefined) await createRecord('shops', item)
     else await updateRecord('shops', item.id, item)
 
     setDrawer(false)

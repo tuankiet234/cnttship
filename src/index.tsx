@@ -3,14 +3,13 @@ import ReactDOM from 'react-dom/client'
 import './index.css'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import Order from './Order'
 import Item from './Item'
 import Category from './Category'
 import Shop from './Shop'
-import OrderDetail from './OrderDetail'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     element: <App />,
     children: [
@@ -24,7 +23,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'order/:id',
-        element: <OrderDetail />,
+        element: <Order />,
       },
       {
         path: 'shop',

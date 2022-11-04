@@ -6,48 +6,40 @@ import Typography from '@mui/material/Typography'
 import Menu from '@mui/material/Menu'
 import MenuIcon from '@mui/icons-material/Menu'
 import Container from '@mui/material/Container'
-import Avatar from '@mui/material/Avatar'
-import Tooltip from '@mui/material/Tooltip'
 import MenuItem from '@mui/material/MenuItem'
 import * as React from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Button from '@mui/material/Button'
-import { initThinBackend } from 'thin-backend'
+import { getCurrentUser, initAuth, initThinBackend } from 'thin-backend'
 import { ThinBackend } from 'thin-backend-react'
 import { LocalCafe } from '@mui/icons-material'
 
 // This needs to be run before any calls to `query`, `createRecord`, etc.
 initThinBackend({
   // This url is different for each backend, this one points to 'vnptship'
-  host: 'https://vnptship.thinbackend.app',
+  host: 'https://cnttship.thinbackend.app',
 })
 
 function App() {
   const pages = ['order', 'shop', 'category', 'item']
-  const settings = ['Profile', 'Account', 'Dashboard', 'Logout']
 
   const navigate = useNavigate()
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null)
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-    null
-  )
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget)
   }
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget)
+
+  const handleCloseNavMenu = (page: string) => {
+    setAnchorElNav(null)
+    navigate(page)
   }
 
-  const handleCloseNavMenu = () => {
-    //setAnchorElNav(null)
-    navigate('')
-  }
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null)
-  }
+  const [user, setUser] = React.useState<any>(null)
+  initAuth().then(() => {
+    getCurrentUser().then(setUser)
+  })
 
   return (
     <ThinBackend requireLogin>
@@ -107,7 +99,7 @@ function App() {
                 }}
               >
                 {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
+                  <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
                     <Typography textAlign="center">{page}</Typography>
                   </MenuItem>
                 ))}
@@ -149,34 +141,8 @@ function App() {
             </Box>
 
             {/* User Setting */}
-            <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title="Open settings">
-                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                sx={{ mt: '45px' }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                {settings.map((setting) => (
-                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                    <Typography textAlign="center">{setting}</Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
+            <Box sx={{ flexGrow: 0, display: { xs: 'none', md: 'flex' } }}>
+              {user?.email}
             </Box>
           </Toolbar>
         </Container>
