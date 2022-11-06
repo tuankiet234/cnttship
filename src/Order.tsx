@@ -28,7 +28,7 @@ import {
   updateRecord,
 } from 'thin-backend'
 import { useQuery } from 'thin-backend-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Schema from 'async-validator'
 import GridHeaderCommand from './components/GridHeaderCommand'
 import GridCellCommand from './components/GridCellCommand'
@@ -106,6 +106,13 @@ export default function Category() {
     },
   ]
 
+  useEffect(() => {
+    if (orderId === undefined) return
+
+    const sharedOrder = rows?.find((r) => r.id === orderId)
+    setOrder(sharedOrder ?? null)
+  }, [orderId, rows])
+
   const [drawer, setDrawer] = useState(false)
   const [item, setItem] = useState<{
     id?: string
@@ -153,11 +160,7 @@ export default function Category() {
 
     if (item.id === undefined) {
       //create
-      const order = await createRecord('orders', item)
-      await createRecord('order_users', {
-        orderId: order.id,
-        userId,
-      })
+      await createRecord('orders', item)
     }
     //update
     else await updateRecord('orders', item.id, item)
@@ -179,15 +182,15 @@ export default function Category() {
 
   const handleOrderTableSelection = async (selection: GridSelectionModel) => {
     const orderId = selection[0] as string
-    console.log(orderId)
     setOrder(rows?.find((r) => r.id === orderId) ?? null)
   }
 
   const handleChangeOrderUser = async (val: string[]) => {
     if (order === null || orderUsers === null) return
-    console.log('check')
-    const orderUserIds = orderUsers.map((ou) => ou.userId)
-    if (val.length < orderUsers.length) {
+    const orderUserIds = orderUsers
+      .filter((ou) => ou.orderId === order.id)
+      .map((ou) => ou.userId)
+    if (val.length < orderUserIds.length) {
       const [userId] = _.difference(orderUserIds, val)
       const id = orderUsers.find(
         (ou) => ou.orderId === order.id && ou.userId === userId
@@ -195,16 +198,12 @@ export default function Category() {
 
       if (id === undefined) return
       await deleteRecord('order_users', id)
-      console.log('deleted')
     } else {
-      console.log('create')
       const [userId] = _.difference(val, orderUserIds)
       await createRecord('order_users', {
         orderId: order.id,
         userId: userId,
       })
-
-      console.log('create')
     }
   }
 
@@ -273,6 +272,7 @@ export default function Category() {
             showColumnRightBorder
             density="compact"
             sx={{ mb: 2 }}
+            selectionModel={order?.id}
             onSelectionModelChange={handleOrderTableSelection}
           />
         </Grid>
@@ -302,11 +302,6 @@ export default function Category() {
                     }
                     multiple
                     labelItem="email"
-                    // startAdornment={
-                    //   <IconButton onClick={() => handleConfirmUserOrders()}>
-                    //     <Check></Check>
-                    //   </IconButton>
-                    // }
                     sx={{ width: 1 / 1 }}
                     onChange={(val) => handleChangeOrderUser(val as string[])}
                   ></SelectComponent>
@@ -405,7 +400,13 @@ export default function Category() {
                                   (ci) =>
                                     ci.shopId === order.shopId &&
                                     orderDetails
-                                      ?.filter((od) => od.orderId === order.id)
+                                      ?.filter(
+                                        (od) =>
+                                          od.orderId === order.id &&
+                                          orderUsers
+                                            ?.map((ou) => ou.userId)
+                                            .includes(od.userId)
+                                      )
                                       .map((od) => od.itemId)
                                       .includes(ci.id)
                                 )
@@ -418,6 +419,9 @@ export default function Category() {
                                       orderDetails?.filter(
                                         (od) =>
                                           od.orderId === order.id &&
+                                          orderUsers
+                                            ?.map((ou) => ou.userId)
+                                            .includes(od.userId) &&
                                           od.itemId === key
                                       ).length
                                     }
@@ -435,7 +439,13 @@ export default function Category() {
                                   (ci) =>
                                     ci.shopId === order.shopId &&
                                     orderDetails
-                                      ?.filter((od) => od.orderId === order.id)
+                                      ?.filter(
+                                        (od) =>
+                                          od.orderId === order.id &&
+                                          orderUsers
+                                            ?.map((ou) => ou.userId)
+                                            .includes(od.userId)
+                                      )
                                       .map((od) => od.itemId)
                                       .includes(ci.id)
                                 ),
@@ -548,6 +558,23 @@ export default function Category() {
                   }
                   columns={[
                     {
+                      field: 'id',
+                      headerName: 'Call',
+                      headerAlign: 'center',
+                      align: 'center',
+                      disableColumnMenu: true,
+                      width: 70,
+                      sortable: false,
+                      renderCell: ({ value }) => (
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleOrderItemClick(value)}
+                        >
+                          <Check></Check>
+                        </IconButton>
+                      ),
+                    },
+                    {
                       field: 'name',
                       headerName: 'Name',
                       flex: 1,
@@ -562,22 +589,6 @@ export default function Category() {
                       align: 'center',
                       disableColumnMenu: true,
                       type: 'number',
-                    },
-                    {
-                      field: 'id',
-                      headerName: 'Choose',
-                      flex: 1,
-                      headerAlign: 'center',
-                      align: 'center',
-                      disableColumnMenu: true,
-                      renderCell: ({ value }) => (
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleOrderItemClick(value)}
-                        >
-                          <Check></Check>
-                        </IconButton>
-                      ),
                     },
                   ]}
                   autoHeight
