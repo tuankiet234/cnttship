@@ -39,7 +39,7 @@ function Shop() {
       renderCell: ({ value, row }) => (
         <GridCellCommand
           onUpdateClick={() => openDrawer(row)}
-          onDeleteClick={() => handleDeleteClick()}
+          onDeleteClick={() => handleDeleteClick(value)}
         ></GridCellCommand>
       ),
       align: 'center',
@@ -97,16 +97,16 @@ function Shop() {
     setDrawer(false)
   }
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = async (id: string) => {
     if (
       // eslint-disable-next-line no-restricted-globals
       !confirm('Do you want to delete this record?')
     )
       return
 
-    if (item.id === undefined) return
+    if (id === undefined) return
 
-    await deleteRecord('shops', item.id)
+    await deleteRecord('shops', id)
   }
 
   return (
